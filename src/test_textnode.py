@@ -1,7 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType, text_node_to_html_node
-from main import split_nodes_delimiter, extract_markdown_images, extract_markdown_links
+from nodeparser import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
 
 
 class TestTextNode(unittest.TestCase):
@@ -40,50 +40,3 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(htmlnode.tag, "b")
         self.assertEqual(htmlnode.value, "This is a text node")
         self.assertEqual(htmlnode1.to_html(), "<a href=\"https://www.google.com\">This is a link</a>")
-
-    def test_split_nodes_delimeter_italic(self):
-        node = TextNode("This is a text with an _italic_ word", TextType.TEXT)
-        self.assertEqual(split_nodes_delimiter([node], "_", TextType.ITALIC), 
-                         [
-                            TextNode("This is a text with an ", TextType.TEXT),
-                            TextNode("italic", TextType.ITALIC),
-                            TextNode(" word", TextType.TEXT)
-                         ])
-        
-    def test_split_nodes_delimeter_bold(self):
-        node = TextNode("This is a text with a **bold** word", TextType.TEXT)
-        self.assertEqual(split_nodes_delimiter([node], "**", TextType.BOLD),
-                         [
-                            TextNode("This is a text with a ", TextType.TEXT),
-                            TextNode("bold", TextType.BOLD),
-                            TextNode(" word", TextType.TEXT)
-                         ])
-        
-    def test_split_nodes_delimeter_code(self):
-        node = TextNode("This is a text with a 'code' word", TextType.TEXT)
-        self.assertEqual(split_nodes_delimiter([node], "'", TextType.CODE), 
-                         [
-                            TextNode("This is a text with a ", TextType.TEXT),
-                            TextNode("code", TextType.CODE),
-                            TextNode(" word", TextType.TEXT)
-                         ])
-        
-    def test_split_nodes_delimeter_single_word(self):
-        node = TextNode("'code'", TextType.TEXT)
-        self.assertEqual(split_nodes_delimiter([node], "'", TextType.CODE), 
-                         [
-                            TextNode("", TextType.TEXT),
-                            TextNode("code", TextType.CODE),
-                            TextNode("", TextType.TEXT)
-                         ])
-        
-    def test_extract_markdown_images(self):
-        text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
-        self.assertListEqual(extract_markdown_images(text), [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")])
-
-    def test_extract_markdown_links(self):
-        text = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
-        self.assertListEqual(extract_markdown_links(text), [("to boot dev", "https://www.boot.dev"), ("to youtube", "https://www.youtube.com/@bootdotdev")])
-
-if __name__ == "__main__":
-    unittest.main()

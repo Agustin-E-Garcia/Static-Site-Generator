@@ -1,5 +1,9 @@
 import unittest
-from nodeparser import split_nodes_delimiter, split_nodes_image, split_nodes_link, extract_markdown_images, extract_markdown_links, text_to_textnodes
+from nodeparser import (
+        split_nodes_delimiter, split_nodes_image, split_nodes_link, extract_markdown_images,
+        extract_markdown_links, text_to_textnodes, split_nodes_list_item, 
+        extract_markdown_ordered_list_item, extract_markdown_unordered_list_item
+        )
 from textnode import TextNode, TextType
 
 class TestNodeParser(unittest.TestCase):
@@ -113,6 +117,30 @@ class TestNodeParser(unittest.TestCase):
                 TextNode("This is text with a link ", TextType.TEXT),
                 TextNode("to boot dev", TextType.LINK, "https://www.boot.dev"),
                 TextNode(" and", TextType.TEXT)
+            ],
+            new_nodes
+        )
+
+    def test_split_ordered_list_item(self):
+        node = TextNode("1. item1\n 2. item2\n 3. item3\n", TextType.TEXT)
+        new_nodes = split_nodes_list_item([node])
+        self.assertListEqual(
+            [
+                TextNode("item1", TextType.LIST_ITEM),
+                TextNode("item2", TextType.LIST_ITEM),
+                TextNode("item3", TextType.LIST_ITEM)
+            ],
+            new_nodes
+        )
+
+    def test_split_unordered_list_item(self):
+        node = TextNode("- item1\n - item2\n - item3\n", TextType.TEXT)
+        new_nodes = split_nodes_list_item([node])
+        self.assertListEqual(
+            [
+                TextNode("item1", TextType.LIST_ITEM),
+                TextNode("item2", TextType.LIST_ITEM),
+                TextNode("item3", TextType.LIST_ITEM)
             ],
             new_nodes
         )

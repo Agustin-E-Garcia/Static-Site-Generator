@@ -2,14 +2,14 @@ from textnode import TextNode, TextType
 from htmlnode import LeafNode
 import re
 
-
 def text_to_textnodes(text):
     text_nodes = [TextNode(text, TextType.TEXT)]
     text_nodes = split_nodes_image(text_nodes)
     text_nodes = split_nodes_link(text_nodes)
+    text_nodes = split_nodes_list_item(text_nodes)
     text_nodes = split_nodes_delimiter(text_nodes, "**", TextType.BOLD)
     text_nodes = split_nodes_delimiter(text_nodes, "_", TextType.ITALIC)
-    text_nodes = split_nodes_delimiter(text_nodes, "'", TextType.CODE)
+    text_nodes = split_nodes_delimiter(text_nodes, "`", TextType.CODE)
     return text_nodes
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
@@ -27,6 +27,20 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
                 new_nodes.append(TextNode(temp[0], TextType.TEXT))
                 new_nodes.append(TextNode(temp[1], text_type))
                 new_nodes.append(TextNode(temp[2], TextType.TEXT))
+    return new_nodes
+
+
+def split_nodes_list_item(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        items = []
+        items.extend(extract_markdown_ordered_list_item(node.text))
+        items.extend(extract_markdown_unordered_list_item(node.text))
+        if len(items) <= 0:
+            new_nodes.append(node)
+        else:
+            for item in items:
+                new_nodes.append(TextNode(item, TextType.LIST_ITEM))
     return new_nodes
 
 def split_nodes_image(old_nodes):
@@ -66,8 +80,35 @@ def split_nodes_link(old_nodes):
                 new_nodes.append(TextNode(text, TextType.TEXT))
     return new_nodes
 
+def extract_markdown_ordered_list_item(text):
+    return re.findall(r"\d\.(?:\s+|)(.+)", text)
+
+def extract_markdown_unordered_list_item(text):
+    return re.findall(r"-(?:\s|)(.+)", text)
+
 def extract_markdown_images(text):
     return re.findall(r"!\[(.*?)\]\((.*?)\)", text)
 
 def extract_markdown_links(text):
     return re.findall(r"\[(.*?)\]\((.*?)\)", text)
+
+def text_node_to_html_node(text_node):
+    new_node = None
+    if text_node.text_type == TextType.TEXT:
+        new_node = LeafNode(None, text_node.text)
+    elif text_node.text_type == TextType.BOLD:
+        new_node = LeafNode("b", text_node.text)
+    elif text_node.text_type == TextType.ITALIC:
+        new_node = LeafNode("i", text_node.text)
+    elif text_node.text_type == TextType.CODE:
+        new_node = LeafNode("code", text_node.text)
+    elif text_node.text_type == TextType.LINK:
+        new_node = LeafNode("a", text_node.text, { "href": text_node.url })
+    elif text_node.text_type == TextType.IMAGE:
+        new_node = LeafNode("img", "", { "href": text_node.url, "alt": text_node.text })
+    elif text_node.text_type == TextType.LIST_ITEM:
+        new_node = LeafNode("li", text_node.text)
+    else:
+        raise Exception(f"Text node type {text_node.text_type} is not a valid TextType")
+    
+    return new_node

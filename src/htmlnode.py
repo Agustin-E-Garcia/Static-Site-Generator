@@ -18,6 +18,9 @@ class HtmlNode():
     def __repr__(self):
         return f"HtmlNode({self.tag}, {self.value}, {self.children}, {self.props})"
     
+    def __eq__(self, other):
+        return self.tag == other.tag and self.value == other.value and self.children == other.children and self.props == other.props
+    
 
 class LeafNode(HtmlNode):
     def __init__(self, tag, value, props=None):
@@ -31,7 +34,11 @@ class LeafNode(HtmlNode):
             return f"{self.value}"
         
         return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
-        
+    
+    def __repr__(self):
+        return f"LeafNode({self.tag}, {self.value}, {self.props})"
+
+
 class ParentNode(HtmlNode):
     def __init__(self, tag, children, props=None):
         super().__init__(tag, None, children, props)
@@ -49,3 +56,6 @@ class ParentNode(HtmlNode):
         html_string += f"</{self.tag}>"
 
         return html_string
+    
+        def __repr__(self):
+            return f"ParentNode({self.tag}, {self.children}, {self.props})"

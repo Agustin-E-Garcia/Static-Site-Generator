@@ -1,16 +1,17 @@
+import sys
 import os
 import shutil
 from markdownparser import markdown_to_html_node
 from htmlnode import ParentNode
 
-def copy_resources():
+def copy_resources(path_to_public):
     if not os.path.exists("static"):
         raise Exception("The path:\"/static\" does not exist")
     
-    if os.path.exists("public"):
-        shutil.rmtree("public")
+    if os.path.exists(path_to_public):
+        shutil.rmtree(path_to_public)
 
-    copy_folder_resources("static", "public")
+    copy_folder_resources("static", path_to_public)
     
 def copy_folder_resources(source_folder, destination_folder):
     os.mkdir(destination_folder)
@@ -30,7 +31,7 @@ def extract_title(markdown):
             title = title.strip("#")
     return title
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     
     markdown = ""
@@ -42,30 +43,41 @@ def generate_page(from_path, template_path, dest_path):
 
     html = markdown_to_html_node(markdown).to_html()
     title = extract_title(from_path)
-    applied_tempalte = template.replace("{{ Title }}", title).replace("{{ Content }}", html)
+    applied_template = template.replace("{{ Title }}", title).replace("{{ Content }}", html)
+    applied_template = applied_template.replace('href="/', 'href="' + basepath + "/")
+    applied_template = applied_template.replace('src="/', 'src="' + basepath + "/")
 
     if not os.path.exists(dest_path):
         os.makedirs(dest_path)
 
     with open(os.path.join(dest_path, "index.html"), "w") as file:
-        file.write(applied_tempalte)
+        file.write(applied_template)
 
-def generate_page_recursively(from_folder, template, dest_folder):
+def generate_page_recursively(from_folder, template, dest_folder, basepath):
     if not os.path.exists(dest_folder):
         os.mkdir(dest_folder)
 
     for path in os.listdir(from_folder):
         full_path = os.path.join(from_folder, path)
         if os.path.isfile(full_path):
-            generate_page(full_path, template, dest_folder)
+            generate_page(full_path, template, dest_folder, basepath)
         else:
-            generate_page_recursively(full_path, template, os.path.join(dest_folder, path))
+            generate_page_recursively(full_path, template, os.path.join(dest_folder, path), basepath)
             
 
 def main():
-    copy_resources()
-    generate_page_recursively("content", "template.html", "public")
+
+    path_to_content = "./content"
+    path_to_template = "./template.html"
+    path_to_public = "./docs"
+    basepath = "/"
+    
+    if(len(sys.argv)) > 1:
+        basepath = sys.argv[1]
+
+    copy_resources(path_to_public)
+    generate_page_recursively(path_to_content, path_to_template, path_to_public, basepath)
     pass
 
-if __name__ == "__main__":
-    main()
+
+main()

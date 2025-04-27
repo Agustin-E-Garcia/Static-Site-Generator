@@ -32,6 +32,39 @@ def text_to_children(block):
         children_node.append(text_node_to_html_node(node))
     return children_node
 
+def parse_to_paragraph(block):
+    return ParentNode("p", text_to_children(block))
+
+def parse_to_code(block):
+    return ParentNode("code", [text_node_to_html_node(TextNode(block, TextType.CODE))])
+
+def parse_to_quote(block):
+    return ParentNode("blockquote", text_to_children(block[1:]))
+
+def parse_to_heading(block):
+        heading_count = len(re.findall(r"^(#+)", block)[0])
+        if heading_count > 6:
+            heading_count = 6
+        return ParentNode(f"h{heading_count}", text_to_children(block.strip("#")))
+
+def parse_to_ordered_list(block):
+    items = block.split("\n")
+    html_items = []
+    for item in items:
+        text = item[3:]
+        children = text_to_children(text)
+        html_items.append(ParentNode("li", children))
+    return ParentNode("ol", html_items)
+
+def parse_to_unordered_list(block):
+    items = block.split("\n")
+    html_items = []
+    for item in items:
+        text = item[2:]
+        children = text_to_children(text)
+        html_items.append(ParentNode("li", children))
+    return ParentNode("ul", html_items)
+
 def markdown_to_html_node(markdown):
     blocks = markdown_to_blocks(markdown)
     block_nodes = []
@@ -43,24 +76,21 @@ def markdown_to_html_node(markdown):
             block_spaced = " ".join(block.split("\n"))
         
             if block_type == BlockType.CODE:
-                block_nodes.append(ParentNode("code", [text_node_to_html_node(TextNode(block, TextType.CODE))]))
+                block_nodes.append(parse_to_code(block))
         
             elif block_type == BlockType.PARAGRAPH:
-                block_nodes.append(ParentNode("p", text_to_children(block_spaced)))
+                block_nodes.append(parse_to_paragraph(block))
         
             elif block_type == BlockType.QUOTE:
-                block_nodes.append(ParentNode("blockquote", text_to_children(block_spaced[1:])))
+                block_nodes.append(parse_to_quote(block))
         
             elif block_type == BlockType.HEADING:
-                heading_count = len(re.findall(r"^(#+)", block_spaced)[0])
-                if heading_count > 6:
-                    heading_count = 6
-                block_nodes.append(ParentNode(f"h{heading_count}", text_to_children(block_spaced[heading_count:])))
+                block_nodes.append(parse_to_heading(block))
 
             elif block_type == BlockType.ORDERED_LIST:
-                block_nodes.append(ParentNode("ol", text_to_children(block)))
+                block_nodes.append(parse_to_ordered_list(block))
 
             elif block_type == BlockType.UNORDERED_LIST:
-                block_nodes.append(ParentNode("ul", text_to_children(block)))
+                block_nodes.append(parse_to_unordered_list(block))
 
     return ParentNode("div", block_nodes)

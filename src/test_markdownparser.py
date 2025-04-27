@@ -62,41 +62,8 @@ class TestMarkdownPaerser(unittest.TestCase):
         self.assertEqual(block_to_block_type(blocks[2]), BlockType.QUOTE)
         self.assertEqual(block_to_block_type(blocks[3]), BlockType.PARAGRAPH)
         self.assertEqual(block_to_block_type(blocks[4]), BlockType.QUOTE)
-
-    def test_text_to_children_unordered_lists(self):
-        block = "- This is a list\n- with items"
-        children = text_to_children(block)
-        self.assertListEqual(
-            [
-                LeafNode("li", "This is a list"),
-                LeafNode("li", "with items")
-            ],
-            children
-            )
         
-    def test_text_to_children_ordered_lists(self):
-        block = "1. This is a list\n 2. with items"
-        children = text_to_children(block)
-        self.assertListEqual(
-            [
-                LeafNode("li", "This is a list"),
-                LeafNode("li", "with items")
-            ],
-            children
-            )
-        
-    def test_text_to_children_extra_lists(self):
-        block = "1. This is a list\n - with items\n and more"
-        children = text_to_children(block)
-        self.assertListEqual(
-            [
-                LeafNode("li", "This is a list"),
-                LeafNode("li", "with items")
-            ],
-            children
-            )
-        
-    def test_markdown_to_html_node(self):
+    def test_markdown_to_html_node_1(self):
         markdown = """This is **bolded** paragraph
 text in a p
 tag here
@@ -109,7 +76,7 @@ This is another paragraph with _italic_ text and `code` here"""
             "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>",
         )
 
-    def test_markdown_to_html_node(self):
+    def test_markdown_to_html_node_2(self):
         self.maxDiff = None
         markdown = """# This is the title\n\n## This is a subtitle\n\n- point 1\n - point 2\n -point 3\n\n>Remember me, remember me"""
         node = markdown_to_html_node(markdown)

@@ -6,7 +6,6 @@ def text_to_textnodes(text):
     text_nodes = [TextNode(text, TextType.TEXT)]
     text_nodes = split_nodes_image(text_nodes)
     text_nodes = split_nodes_link(text_nodes)
-    text_nodes = split_nodes_list_item(text_nodes)
     text_nodes = split_nodes_delimiter(text_nodes, "**", TextType.BOLD)
     text_nodes = split_nodes_delimiter(text_nodes, "_", TextType.ITALIC)
     text_nodes = split_nodes_delimiter(text_nodes, "`", TextType.CODE)
@@ -27,20 +26,6 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
                 new_nodes.append(TextNode(temp[0], TextType.TEXT))
                 new_nodes.append(TextNode(temp[1], text_type))
                 new_nodes.append(TextNode(temp[2], TextType.TEXT))
-    return new_nodes
-
-
-def split_nodes_list_item(old_nodes):
-    new_nodes = []
-    for node in old_nodes:
-        items = []
-        items.extend(extract_markdown_ordered_list_item(node.text))
-        items.extend(extract_markdown_unordered_list_item(node.text))
-        if len(items) <= 0:
-            new_nodes.append(node)
-        else:
-            for item in items:
-                new_nodes.append(TextNode(item, TextType.LIST_ITEM))
     return new_nodes
 
 def split_nodes_image(old_nodes):
@@ -79,12 +64,6 @@ def split_nodes_link(old_nodes):
             if len(text) > 0:
                 new_nodes.append(TextNode(text, TextType.TEXT))
     return new_nodes
-
-def extract_markdown_ordered_list_item(text):
-    return re.findall(r"\d\.(?:\s+|)(.+)", text)
-
-def extract_markdown_unordered_list_item(text):
-    return re.findall(r"-(?:\s|)(.+)", text)
 
 def extract_markdown_images(text):
     return re.findall(r"!\[(.*?)\]\((.*?)\)", text)

@@ -9,16 +9,16 @@ def markdown_to_blocks(markdown):
     return blocks
 
 def block_to_block_type(block):    
-    if block[0] == "#":
+    if block.startswith("#"):
         return BlockType.HEADING
     
-    if "```" in block[:3] and "```" in block[-3:]:
+    if block.startswith("```") and block.endswith("```"):
         return BlockType.CODE
     
-    if ">" in block[0]:
+    if block.startswith(">"):
         return BlockType.QUOTE
     
-    if block[0] == "-":
+    if block.startswith("-"):
         return BlockType.UNORDERED_LIST
     
     if block[0].isdigit() and block[1] == ".":
@@ -36,16 +36,30 @@ def parse_to_paragraph(block):
     return ParentNode("p", text_to_children(block))
 
 def parse_to_code(block):
-    return ParentNode("code", [text_node_to_html_node(TextNode(block, TextType.CODE))])
+    if not block.startswith("```") or not block.endswith("```"):
+        raise ValueError("invalid code block")
+    text = block[4:-3]
+    raw_text_node = TextNode(text, TextType.TEXT)
+    child = text_node_to_html_node(raw_text_node)
+    code = ParentNode("code", [child])
+    return ParentNode("pre", [code])
 
 def parse_to_quote(block):
-    return ParentNode("blockquote", text_to_children(block[1:]))
+    lines = block.split("\n")
+    new_lines = []
+    for line in lines:
+        if not line.startswith(">"):
+            raise ValueError("invalid quote block")
+        new_lines.append(line.lstrip(">").strip())
+    content = " ".join(new_lines)
+    children = text_to_children(content)
+    return ParentNode("blockquote", children)
 
 def parse_to_heading(block):
         heading_count = len(re.findall(r"^(#+)", block)[0])
         if heading_count > 6:
             heading_count = 6
-        return ParentNode(f"h{heading_count}", text_to_children(block.strip("#")))
+        return ParentNode(f"h{heading_count}", text_to_children(block.strip("#").strip()))
 
 def parse_to_ordered_list(block):
     items = block.split("\n")

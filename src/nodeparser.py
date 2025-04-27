@@ -17,15 +17,18 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         if node.text_type != TextType.TEXT:
             new_nodes.append(node)
         else:
-            temp = node.text.split(delimiter)
-            if len(temp) == 1:
-                new_nodes.append(TextNode(temp[0], TextType.TEXT))
-            elif len(temp) < 3:
+            splits = node.text.split(delimiter)
+            if len(splits) == 1:
+                new_nodes.append(TextNode(splits[0], TextType.TEXT))
+            elif len(splits) % 2 == 0:
                 raise Exception(f"Exception parsing line: \"{node.text}\" for {text_type}. Syntax error")
             else:
-                new_nodes.append(TextNode(temp[0], TextType.TEXT))
-                new_nodes.append(TextNode(temp[1], text_type))
-                new_nodes.append(TextNode(temp[2], TextType.TEXT))
+                for i in range(len(splits)):
+                    if splits[i] != "":
+                        if i % 2 == 0:
+                            new_nodes.append(TextNode(splits[i], TextType.TEXT))
+                        else:
+                            new_nodes.append(TextNode(splits[i], text_type))
     return new_nodes
 
 def split_nodes_image(old_nodes):
@@ -84,7 +87,7 @@ def text_node_to_html_node(text_node):
     elif text_node.text_type == TextType.LINK:
         new_node = LeafNode("a", text_node.text, { "href": text_node.url })
     elif text_node.text_type == TextType.IMAGE:
-        new_node = LeafNode("img", "", { "href": text_node.url, "alt": text_node.text })
+        new_node = LeafNode("img", "", { "src": text_node.url, "alt": text_node.text })
     elif text_node.text_type == TextType.LIST_ITEM:
         new_node = LeafNode("li", text_node.text)
     else:
